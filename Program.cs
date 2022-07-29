@@ -12,26 +12,44 @@ namespace UnitypackgeExtractor
 {
 	internal class Program
 	{
-
-		static string UnitypackagePath;
-		static string UserTempFolder;
-		static string OutputDirectory;
+		private static string UnitypackagePath;
+		private static string UserTempFolder;
+		private static string OutputDirectory;
 		static long ThreadWork = 0;
+
+		static bool outputMetaFiles = false;
+		static bool outputPreviewFiles = true;
 
 		static void Main(string[] args)
 		{
-			if(args.Length < 1)
+
+			if (args.Contains("-help"))
 			{
-				Console.WriteLine("Drop a unitypackge on this window and press enter.");
-				UnitypackagePath = Console.ReadLine();
-				Console.WriteLine("Extracting...");
+				OutputHelp();
+				return;
 			}
 
-			if (UnitypackagePath == null) {
+			if (args.Contains("-outputMeta"))
+			{
+				outputMetaFiles = true;
+			}
+
+			if (args.Contains("-noPreview"))
+			{
+				outputPreviewFiles = false;
+			}
+
+			if (args.Length < 1 || args[0] == null || args[0].Length < 1 || !File.Exists(args[0]) || !Path.HasExtension(".unitypackage"))
+			{
+				UnitypackagePath = GetUnityPackage();
+				Console.WriteLine("Extracting...");
+			}
+			else
+			{
 				UnitypackagePath = args[0];
 			}
 
-			if(UnitypackagePath.Length < 2)
+			if (UnitypackagePath.Length < 2)
 			{
 				Console.WriteLine("UnitypackagePath Error");
 				Console.ReadKey();
@@ -86,6 +104,13 @@ namespace UnitypackgeExtractor
 
 			Console.WriteLine("Press any key to close.");
 			Console.ReadKey();
+		}
+
+		private static void OutputHelp()
+		{
+			Console.WriteLine("Usage: \"extract.exe [unitypackage file] [options]\"");
+			Console.WriteLine("Use -outputMeta to output unity's meta files");
+			Console.WriteLine("Use -noPreview to skip unity's preview files");
 		}
 
 		private static string GenreateOutputDirectory()
@@ -154,9 +179,13 @@ namespace UnitypackgeExtractor
 
 			if (fileData.Length < 1)
 			{
+				// Theese are most likely 'assets' generated
+				// by unity that define directories
+
 				//Console.Error.WriteLine($"Asset is size 0 \"{folder}\"");
 				//File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath) + ".emptyasset") , new byte[0]);
 			}
+
 			else
 			{
 				File.WriteAllBytes(filePath, fileData);
@@ -164,15 +193,35 @@ namespace UnitypackgeExtractor
 
 			if(filePreviewData.Length > 0)
 			{
-				File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath) + "_preview.png"), filePreviewData);
+				if (outputPreviewFiles) File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath) + "_preview.png"), filePreviewData);
 			}
 
 			if (fileMetaData.Length > 0)
 			{
-				File.WriteAllBytes(filePath + ".meta", fileMetaData);
+				if (outputMetaFiles) File.WriteAllBytes(filePath + ".meta", fileMetaData);
 			}
 
 			Interlocked.Increment(ref ThreadWork);
+		}
+
+		private static string GetUnityPackage()
+		{
+			Console.WriteLine("Please drop a unitypackge on this window and press enter.");
+			var upp = Console.ReadLine();
+			if (!File.Exists(upp))
+			{
+				Console.WriteLine("Error");
+				Console.WriteLine(" ");
+				upp = GetUnityPackage();
+			}
+
+			if(Path.GetExtension(upp) != ".unitypackage")
+			{
+				Console.WriteLine("Error");
+				Console.WriteLine(" ");
+				upp = GetUnityPackage();
+			}
+			return upp;
 		}
 
 	}
