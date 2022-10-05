@@ -12,7 +12,7 @@
 You can also use the command line to extract unitypackages with some options.
 
 Example: extract.exe [unitypackage] [-options]
-* "-noMeta" : Skip the extraction of unity's .meta files. (by default the meta files is necessary)
+* "-nometa" : Skip the extraction of unity's .meta files. (by default the meta files is necessary)
 * "-outputPreview" : Enable extraction of unity's preview files. (by default the preview is omitted)
 * "-wait" : Wait in the end and ask user to press a key to finish. (by default the app will exit by itself)
 
